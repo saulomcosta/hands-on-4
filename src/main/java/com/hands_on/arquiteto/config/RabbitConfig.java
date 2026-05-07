@@ -55,18 +55,59 @@ public class RabbitConfig {
     // CONSTANTES (PADRONIZAÇÃO)
     // ================================
 
+    // ================================
+    // Exchanges
+    // ================================
+
     // 📡 Exchange principal (roteamento de eventos de negócio)
-    public static final String EXCHANGE = "order.exchange";
+    public static final String ORDER_EXCHANGE = "order.exchange";
+
+    // 📡 Exchange para processamento de pagamento
+    public static final String PAYMENT_EXCHANGE = "payment.exchange";
+
+    // 📡 Exchange para envio de e-mails
+    public static final String EMAIL_EXCHANGE = "email.exchange";
+
+    // ================================
+    // Queues
+    // ================================
+
     // 📥 Fila principal de processamento de pagamento
-    public static final String QUEUE = "payment.queue";
+    public static final String PAYMENT_QUEUE = "payment.queue";
+
+    // 📥 Fila principal de processamento de e-mail
+    public static final String EMAIL_QUEUE = "email.queue";
+
+    // ================================
+    // Routing Keys (Eventos)
+    // ================================
+
+    // 📥 Fila de eventos de pagamento processado (routing key)
+    public static final String PAYMENT_PROCESSED = "payment.processed";
+
     // 🔀 Routing key usada para direcionar mensagens de pedidos criado
-    public static final String ROUTING_KEY = "order.created";
+    public static final String ORDER_CREATED = "order.created";
+
+    // 🔀 Routing Key usada para direcionar mensagens de email
+    public static final String EMAIL_SENT = "email.sent";
+
+    // ================================
+    // DLQ e DLX
+    // ================================
+
     // ☠️ Nome da Dead Letter Queue (fila de erro)
     public static final String PAYMENT_DLQ = "payment.dlq";
-    // 🔁 Exchange de Dead Letter (DLX)
-    public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
+
     // ⚙️ Chave padrão usada pelo RabbitMQ para definir exchange de Dead Letter (DLX)
     public static final String DLX_EXCHANGE = "dlx.exchange";
+
+    // ================================
+    // Dead Letter
+    // ================================
+
+    // 🔁 Exchange de Dead Letter (DLX)
+    public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
+
     // ⚙️ Chave padrão usada pelo RabbitMQ para definir routing key da DLQ
     public static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
 
@@ -121,7 +162,7 @@ public class RabbitConfig {
      * 🧠 Direciona mensagens com base na routing key exata.
      */
     @Bean
-    public DirectExchange exchange() {
+    public DirectExchange orderExchange() {
         /*
          * Cria uma Exchange do tipo DIRECT.
          *
@@ -133,7 +174,7 @@ public class RabbitConfig {
          * Exemplo: Se enviar mensagem com routing key "order.created", ela será enviada para a fila
          * associada com essa mesma key.
          */
-        return new DirectExchange(EXCHANGE);
+        return new DirectExchange(ORDER_EXCHANGE);
     }
 
     /**
@@ -163,7 +204,7 @@ public class RabbitConfig {
 
         return QueueBuilder
                 // Mensagem não é apagada mesmo se o RabbitMQ for reiniciado
-                .durable(QUEUE)
+                .durable(PAYMENT_QUEUE)
                 // Define exchange de erro (DLX)
                 .withArgument(X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE)
                 // Define routing key da fila de erro
@@ -180,7 +221,7 @@ public class RabbitConfig {
      */
     @Bean
     public Queue deadLetterQueue() {
-        return new Queue("payment.dlq");
+        return new Queue(PAYMENT_DLQ);
     }
 
     // ================================
@@ -212,7 +253,7 @@ public class RabbitConfig {
          * (payment.queue) ↓ Consumer (PaymentService)
          */
 
-        return BindingBuilder.bind(paymentQueue()).to(exchange()).with(ROUTING_KEY);
+        return BindingBuilder.bind(paymentQueue()).to(orderExchange()).with(ORDER_CREATED);
 
     }
 
