@@ -1,0 +1,126 @@
+
+spring:
+  # =========================
+  # CONFIGURAÇÃO DA APLICAÇÃO
+  # =========================
+  application:
+    # Nome lógico da aplicação dentro do ecossistema Spring.
+    # Pode ser usado em logs, monitoramento, tracing, etc.
+    name: arquiteto
+
+  # =========================
+  # CONFIGURAÇÃO DO BANCO DE DADOS (DataSource)
+  # =========================
+  datasource:
+    # URL de conexão JDBC para o PostgreSQL:
+    # - localhost → banco rodando localmente
+    # - 5432 → porta padrão do PostgreSQL
+    # - orders → nome do banco
+    url: jdbc:postgresql://localhost:5432/orders
+    # Driver JDBC responsável pela comunicação Java ↔ PostgreSQL
+    driverClassName: org.postgresql.Driver
+    # Usuário do banco de dados
+    username: postgres
+    # Senha do usuário do banco de dados
+    password: postgres
+
+  # =========================
+  # CONFIGURAÇÃO DO JPA / HIBERNATE
+  # =========================
+  jpa:
+    hibernate:
+      # Estratégia de manipulação do schema do banco:
+
+      # opções comuns:
+      # create   → apaga e recria tabelas a cada startup
+      # update   → atualiza schema automaticamente
+      # create-drop → cria ao iniciar e apaga ao parar
+      # validate → APENAS valida se estrutura existe (mais seguro em produção)
+
+      # Aqui você escolheu "validate":
+      # → o Hibernate NÃO cria tabelas
+      # → apenas verifica se o schema está correto
+      ddl-auto: validate
+    # Exibe no console todas as queries SQL geradas pelo Hibernate
+    # útil para debug e aprendizado
+    show-sql: true
+    properties:
+      hibernate:
+        # Dialeto do banco:
+        # informa ao Hibernate como gerar SQL específico do PostgreSQL
+
+        # OBS:
+        # versões modernas do Hibernate detectam automaticamente,
+        # então essa configuração muitas vezes é opcional
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    # Configuração de conexão com o broker RabbitMQ
+    # O RabbitMQ é responsável por mensageria assíncrona na aplicação,
+    # permitindo comunicação desacoplada entre serviços (ex: pedidos, pagamento, email)
+    # 🧠 Como isso é usado na aplicação:
+    # O Spring Boot usa essas configurações automaticamente para:
+    # - Criar conexão com o RabbitMQ
+    # - Gerenciar envio de mensagens (Producer)
+    # - Consumir mensagens (Consumer)
+    # - Integrar com filas, exchanges e bindings
+    # 📌 Exemplo de uso no projeto (futuro):
+    # - OrderService pode enviar evento: "ORDER_CREATED"
+    # - PaymentService pode consumir essa mensagem
+    # - EmailService pode reagir após pagamento confirmado
+    # 🚀 Benefícios:
+    # - Desacoplamento entre serviços
+    # - Escalabilidade
+    # - Processamento assíncrono
+    # - Maior resiliência (evita falha em cascata)
+    # ⚠️ Observação importante:
+    # Se estiver rodando via Docker Compose, use:
+    # host: rabbitmq
+    # (nome do serviço no docker-compose)
+    rabbitmq:
+      # Endereço do servidor RabbitMQ
+      # "localhost" indica que está rodando na mesma máquina da aplicação
+      # ⚠️ Se estiver usando Docker, normalmente será o nome do container (ex: rabbitmq)
+      host: localhost
+      # Porta padrão do protocolo AMQP (usado para envio/recebimento de mensagens)
+      # Essa é a porta que sua aplicação usa para se conectar ao broker
+      port: 5672
+      # Usuário padrão do RabbitMQ
+      # ⚠️ Em produção, NÃO usar "guest" por questões de segurança
+      username: guest
+      # Senha do usuário do RabbitMQ
+      # ⚠️ Também deve ser alterada em ambientes reais
+      password: guest
+      listener:
+        simple:
+          retry:
+          # Ativa o mecanismo de retry automático no listener (consumer)
+          # Quando ocorre uma exceção no @RabbitListener, a mensagem será reproces
+            enabled: true
+            # Número máximo de tentativas antes de considerar a mensagem como falha definitiva
+            # Após esse limite, a mensagem segue para DLQ (se configurado)
+            max-attempts: 3
+            # Tempo inicial (em milissegundos) antes da primeira tentativa de retry
+            # Ex: 1000 = 1 segundo
+            initial-interval: 1000
+            # Multiplicador para o tempo de espera entre tentativas (backoff exponencial)
+            # Ex:
+            # 1ª tentativa → 1s
+            # 2ª tentativa → 2s
+            # 3ª tentativa → 4
+            multiplier: 2.0
+
+  # =========================
+  # CONSOLE DO H2 (DESENVOLVIMENTO)
+  # =========================
+  h2:
+    console:
+      # Habilita console web do H2 (banco em memória)
+
+      # IMPORTANTE:
+      # No seu caso você está usando PostgreSQL,
+      # então isso só tem efeito se você também estiver usando H2 em algum profile.
+      #
+      # Normalmente usado em:
+      # - testes
+      # - ambiente local leve
+      # - aprendizado
+      enabled: true

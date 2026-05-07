@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- =========================
+         MODELO DO PROJETO MAVEN
+         ========================= -->
+	<modelVersion>4.0.0</modelVersion>
+    <!-- =========================
+         SPRING BOOT PARENT
+         =========================
+         Define versões padrão de:
+         - Spring Boot
+         - Plugins Maven
+         - Dependências gerenciadas
+         - Configurações padrão do build
+    -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.0.6</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+    <!-- =========================
+         IDENTIFICAÇÃO DO PROJETO
+         ========================= -->
+	<groupId>com.hands-on</groupId>
+	<artifactId>arquiteto</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+    <!-- Nome e descrição (opcionalmente usados em documentação/artefatos) -->
+	<name/>
+	<description/>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+    <!-- =========================
+         PROPRIEDADES DO PROJETO
+         ========================= -->
+	<properties>
+		<java.version>21</java.version>
+	</properties>
+    <!-- =========================
+         DEPENDÊNCIAS
+         ========================= -->
+	<dependencies>
+        <!-- =========================
+             SPRING AMQP (RabbitMQ)
+             =========================
+             Permite comunicação assíncrona via filas (RabbitMQ)
+             Usado para arquitetura orientada a eventos
+        -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp</artifactId>
+		</dependency>
+        <!-- =========================
+             SPRING DATA JPA
+             =========================
+             Camada de persistência:
+             - Hibernate (ORM)
+             - Repositories
+             - EntityManager
+        -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+        <!-- =========================
+             SPRING WEB MVC
+             =========================
+             Cria API REST:
+             - Controllers
+             - Tomcat embutido
+             - DispatcherServlet
+        -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+        <!-- =========================
+             RABBIT STREAM (AMQP AVANÇADO)
+             =========================
+             Comunicação baseada em streams com RabbitMQ
+             Mais performático para cenários de eventos
+        -->
+		<dependency>
+			<groupId>org.springframework.amqp</groupId>
+			<artifactId>spring-rabbit-stream</artifactId>
+		</dependency>
+        <!-- =========================
+             POSTGRESQL DRIVER
+             =========================
+             Driver JDBC para conexão com banco PostgreSQL
+             (runtime → necessário apenas em execução)
+        -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+        <!-- =========================
+             LOMBOK
+             =========================
+             Gera código automaticamente:
+             - getters/setters
+             - builders
+             - constructors
+             Reduz boilerplate
+        -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+        <!-- =========================
+             TESTES (AMQP)
+             ========================= -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-amqp-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+        <!-- =========================
+             TESTES JPA
+             ========================= -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+        <!-- =========================
+             TESTES WEB
+             ========================= -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+    <!-- =========================
+         PROCESSO DE BUILD
+         ========================= -->
+	<build>
+		<plugins>
+            <!-- =========================
+                 SPRING BOOT PLUGIN
+                 =========================
+                 Responsável por:
+                 - empacotar aplicação (jar executável)
+                 - executar aplicação via mvn spring-boot:run
+            -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+                    <!-- Exclui Lombok do jar final (não é necessário em runtime) -->
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+            <!-- =========================
+                 COMPILADOR JAVA (MAVEN)
+                 =========================
+                 Controla compilação e annotation processors
+                 (ex: Lombok, MapStruct)
+            -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+                    <!-- COMPILAÇÃO PRINCIPAL -->
+					<execution>
+						<id>default-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+                                <!-- Lombok processado em compile time -->
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+                    <!-- COMPILAÇÃO DE TESTES -->
+					<execution>
+						<id>default-testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
