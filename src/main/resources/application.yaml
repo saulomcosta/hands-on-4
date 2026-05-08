@@ -107,6 +107,7 @@ spring:
             # 2ª tentativa → 2s
             # 3ª tentativa → 4
             multiplier: 2.0
+          default-requeue-rejected: false
 
   # =========================
   # CONSOLE DO H2 (DESENVOLVIMENTO)

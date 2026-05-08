@@ -1,0 +1,780 @@
+# =========================================================
+# ENTERPRISE ARCHITECTURE ENVIRONMENT
+# =========================================================
+#
+# Este ambiente simula uma arquitetura moderna baseada em:
+#
+# ✅ Microsserviços
+# ✅ Event Driven Architecture
+# ✅ Cloud Native
+# ✅ Observabilidade
+# ✅ Distributed Tracing
+# ✅ Streaming
+# ✅ API Gateway
+# ✅ Mensageria
+# ✅ Banco SQL + NoSQL
+# ✅ Cache distribuído
+# ✅ AWS local
+# ✅ DevOps
+# ✅ CI/CD
+#
+# =========================================================
+#
+# O objetivo deste ambiente é permitir:
+#
+# - Desenvolvimento local enterprise
+# - Estudos de arquitetura distribuída
+# - Simulação real de ambientes corporativos
+# - Laboratório DevOps
+# - Testes de observabilidade
+# - Testes de microsserviços
+# - Estudos Event Driven
+# - Estudos Kafka/RabbitMQ
+# - Estudos Cloud AWS
+#
+# =========================================================
+#
+# RECURSOS NECESSÁRIOS RECOMENDADOS
+#
+# 🔥 Ideal:
+#
+# RAM: 16GB+
+# CPU: 6 núcleos+
+# SSD NVMe
+#
+# 🔥 Mínimo:
+#
+# RAM: 8GB
+#
+# =========================================================
+#
+# SERVIÇOS MAIS PESADOS
+#
+# ⚠ Elasticsearch
+# ⚠ Kibana
+# ⚠ SonarQube
+# ⚠ Kafka
+#
+# =========================================================
+#
+# ACESSOS PRINCIPAIS
+#
+# RabbitMQ:
+# http://localhost:15672
+#
+# Grafana:
+# http://localhost:3000
+#
+# Prometheus:
+# http://localhost:9090
+#
+# Kibana:
+# http://localhost:5601
+#
+# Zipkin:
+# http://localhost:9411
+#
+# SonarQube:
+# http://localhost:9000
+#
+# =========================================================
+
+services:
+
+  # =======================================================
+  # POSTGRESQL
+  # =======================================================
+  #
+  # PostgreSQL é um banco relacional extremamente robusto.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Persistência transacional
+  # ✅ Integridade de dados
+  # ✅ ACID
+  # ✅ Queries complexas
+  # ✅ Relacionamentos
+  # ✅ Consistência forte
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ ERP
+  # ✅ Financeiro
+  # ✅ APIs REST
+  # ✅ Microsserviços
+  # ✅ Pedidos
+  # ✅ Pagamentos
+  # ✅ Controle de estoque
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Altíssima confiabilidade
+  # ✅ Muito utilizado em empresas
+  # ✅ Excelente performance
+  # ✅ Forte integração Spring Boot
+  #
+  # =======================================================
+  # RECURSOS NECESSÁRIOS
+  # =======================================================
+  #
+  # RAM:
+  # leve/médio
+  #
+  # CPU:
+  # baixo consumo
+  #
+  # SSD recomendado
+  #
+  # =======================================================
+
+  postgres:
+
+    image: postgres:16
+
+    restart: always
+
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: appdb
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # MONGODB
+  # =======================================================
+  #
+  # Banco NoSQL orientado a documentos.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Flexibilidade estrutural
+  # ✅ JSON nativo
+  # ✅ Escalabilidade horizontal
+  # ✅ Alta velocidade leitura/escrita
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Catálogos
+  # ✅ Logs
+  # ✅ Payloads dinâmicos
+  # ✅ Dados não estruturados
+  # ✅ Analytics
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Estrutura flexível
+  # ✅ Escala facilmente
+  # ✅ Excelente para microsserviços
+  #
+  # =======================================================
+
+  mongodb:
+
+    image: mongo:7
+
+    restart: always
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - mongo_data:/data/db
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # REDIS
+  # =======================================================
+  #
+  # Banco em memória extremamente rápido.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Cache ultra rápido
+  # ✅ Sessões distribuídas
+  # ✅ Rate limit
+  # ✅ Pub/Sub
+  # ✅ Filas leves
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Cache APIs
+  # ✅ Tokens JWT
+  # ✅ Sessões login
+  # ✅ Anti flood
+  # ✅ Leaderboards
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Reduz carga banco
+  # ✅ APIs muito mais rápidas
+  # ✅ Menor latência
+  #
+  # =======================================================
+
+  redis:
+
+    image: redis:latest
+
+    restart: always
+
+    command: redis-server --appendonly yes
+
+    ports:
+      - "6379:6379"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # RABBITMQ
+  # =======================================================
+  #
+  # RabbitMQ é um broker de mensageria AMQP.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Filas
+  # ✅ Eventos
+  # ✅ Processamento assíncrono
+  # ✅ Retry
+  # ✅ Dead Letter Queue
+  # ✅ Desacoplamento
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Emails
+  # ✅ Pagamentos
+  # ✅ Pedidos
+  # ✅ Notificações
+  # ✅ Integrações
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Desacopla sistemas
+  # ✅ Melhora escalabilidade
+  # ✅ Reduz gargalos
+  # ✅ Tolerância a falhas
+  #
+  # =======================================================
+
+  rabbitmq:
+
+    image: rabbitmq:3-management
+
+    restart: always
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # ZOOKEEPER
+  # =======================================================
+  #
+  # Serviço de coordenação distribuída.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Coordenação cluster
+  # ✅ Leader election
+  # ✅ Metadata cluster
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # Necessário em Kafka tradicional.
+  #
+  # =======================================================
+
+  zookeeper:
+
+    image: confluentinc/cp-zookeeper:latest
+
+    restart: always
+
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+    ports:
+      - "2181:2181"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # APACHE KAFKA
+  # =======================================================
+  #
+  # Plataforma distribuída de streaming.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Streaming
+  # ✅ Alta escala
+  # ✅ Alta vazão
+  # ✅ Event sourcing
+  # ✅ Replay eventos
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Big Data
+  # ✅ Analytics
+  # ✅ Event Driven
+  # ✅ Logs distribuídos
+  # ✅ Streaming financeiro
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Altíssima escalabilidade
+  # ✅ Processa milhões eventos
+  # ✅ Muito usado em Big Techs
+  #
+  # =======================================================
+  # RECURSOS NECESSÁRIOS
+  # =======================================================
+  #
+  # ⚠ Consome bastante RAM
+  # ⚠ SSD recomendado
+  #
+  # =======================================================
+
+  kafka:
+
+    image: confluentinc/cp-kafka:latest
+
+    restart: always
+
+    depends_on:
+      - zookeeper
+
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    ports:
+      - "9092:9092"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # PROMETHEUS
+  # =======================================================
+  #
+  # Sistema moderno de métricas.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Métricas containers
+  # ✅ Métricas JVM
+  # ✅ CPU
+  # ✅ Memória
+  # ✅ Alertas
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Observabilidade
+  # ✅ SRE
+  # ✅ DevOps
+  # ✅ Produção
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Visibilidade sistema
+  # ✅ Detecção gargalos
+  # ✅ Monitoramento real-time
+  #
+  # =======================================================
+
+  prometheus:
+
+    image: prom/prometheus
+
+    restart: always
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # GRAFANA
+  # =======================================================
+  #
+  # Dashboard visual observabilidade.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Dashboards
+  # ✅ Gráficos
+  # ✅ Alertas
+  # ✅ Observabilidade visual
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ NOC
+  # ✅ SRE
+  # ✅ Operações
+  # ✅ DevOps
+  #
+  # =======================================================
+
+  grafana:
+
+    image: grafana/grafana
+
+    restart: always
+
+    depends_on:
+      - prometheus
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # ELASTICSEARCH
+  # =======================================================
+  #
+  # Engine distribuída de busca/indexação.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Logs indexados
+  # ✅ Busca rápida
+  # ✅ Analytics
+  # ✅ Full-text search
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Observabilidade
+  # ✅ Logs
+  # ✅ E-commerce search
+  # ✅ SIEM
+  #
+  # =======================================================
+  # RECURSOS NECESSÁRIOS
+  # =======================================================
+  #
+  # ⚠ Alto consumo memória
+  # ⚠ JVM pesada
+  #
+  # =======================================================
+
+  elasticsearch:
+
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+
+    restart: always
+
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: false
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+
+    ports:
+      - "9200:9200"
+
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # KIBANA
+  # =======================================================
+  #
+  # Interface visual Elasticsearch.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Visualização logs
+  # ✅ Dashboards
+  # ✅ Analytics
+  #
+  # =======================================================
+
+  kibana:
+
+    image: docker.elastic.co/kibana/kibana:8.13.4
+
+    restart: always
+
+    depends_on:
+      - elasticsearch
+
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+
+    ports:
+      - "5601:5601"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # ZIPKIN
+  # =======================================================
+  #
+  # Distributed tracing.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Rastreamento requests
+  # ✅ Latência microsserviços
+  # ✅ Fluxo distribuído
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Microsserviços
+  # ✅ APIs distribuídas
+  # ✅ Debug produção
+  #
+  # =======================================================
+
+  zipkin:
+
+    image: openzipkin/zipkin
+
+    restart: always
+
+    ports:
+      - "9411:9411"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # LOCALSTACK
+  # =======================================================
+  #
+  # AWS local.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Simulação AWS
+  # ✅ S3 local
+  # ✅ SQS local
+  # ✅ SNS local
+  # ✅ Lambda local
+  #
+  # =======================================================
+  # BENEFÍCIOS
+  # =======================================================
+  #
+  # ✅ Economiza AWS
+  # ✅ Desenvolvimento offline
+  # ✅ Testes cloud local
+  #
+  # =======================================================
+
+  localstack:
+
+    image: localstack/localstack
+
+    restart: always
+
+    environment:
+      SERVICES: s3,sqs,sns,dynamodb,lambda
+
+    ports:
+      - "4566:4566"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # SONARQUBE
+  # =======================================================
+  #
+  # Qualidade de código enterprise.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Bugs
+  # ✅ Vulnerabilidades
+  # ✅ Code smell
+  # ✅ Coverage
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ CI/CD
+  # ✅ Pull Request
+  # ✅ Qualidade software
+  #
+  # =======================================================
+
+  sonarqube:
+
+    image: sonarqube:lts-community
+
+    restart: always
+
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: true
+
+    ports:
+      - "9000:9000"
+
+    networks:
+      - backend-network
+
+  # =======================================================
+  # KONG API GATEWAY
+  # =======================================================
+  #
+  # Gateway de microsserviços.
+  #
+  # =======================================================
+  # O QUE ELE ENTREGA
+  # =======================================================
+  #
+  # ✅ Segurança
+  # ✅ Rate limit
+  # ✅ Autenticação
+  # ✅ Roteamento APIs
+  # ✅ Centralização tráfego
+  #
+  # =======================================================
+  # QUANDO USAR
+  # =======================================================
+  #
+  # ✅ Microsserviços
+  # ✅ APIs públicas
+  # ✅ Segurança centralizada
+  #
+  # =======================================================
+
+  kong:
+
+    image: kong:latest
+
+    restart: always
+
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+
+    volumes:
+      - ./kong:/kong/declarative
+
+    networks:
+      - backend-network
+
+# =========================================================
+# REDE INTERNA COMPARTILHADA
+# =========================================================
+
+networks:
+
+  backend-network:
+
+# =========================================================
+# PERSISTÊNCIA
+# =========================================================
+
+volumes:
+
+  postgres_data:
+  mongo_data:
+  rabbitmq_data:
+  grafana_data:
+  elastic_data:

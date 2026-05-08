@@ -3,14 +3,11 @@ package com.hands_on.arquiteto.messaging.consumer;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
-
 import com.hands_on.arquiteto.config.RabbitConfig;
-import com.hands_on.arquiteto.event.PaymentProcessedEvent;
+import com.hands_on.arquiteto.messaging.payload.PaymentProcessedEvent;
 
 /**
- * ===================================================================================== 📧 EMAIL
- * CONSUMER — PROCESSADOR DE NOTIFICAÇÕES
- * =====================================================================================
+ * ============= 📧 EMAIL CONSUMER — PROCESSADOR DE NOTIFICAÇÕES ============
  *
  * 🧠 VISÃO GERAL: Este componente é responsável por consumir eventos de pagamento processado e
  * executar o envio de e-mails de forma assíncrona.
@@ -18,21 +15,16 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  * Faz parte de uma arquitetura orientada a eventos (EDA), onde cada etapa do fluxo reage a eventos
  * de negócio.
  *
- * ------------------------------------------------------------------------------------- 📡 FLUXO DO
- * SISTEMA -------------------------------------------------------------------------------------
+ * ------------- 📡 FLUXO DO SISTEMA ------------
  *
  * OrderCreatedEvent ↓ PaymentConsumer ↓ PaymentProcessedEvent ↓ EmailConsumer (este componente)
  *
- * ------------------------------------------------------------------------------------- 🎯
- * RESPONSABILIDADES
- * -------------------------------------------------------------------------------------
+ * --------------- 🎯 RESPONSABILIDADES ---------------
  *
  * ✅ Consumir evento PaymentProcessedEvent ✅ Executar envio de e-mail (notificação) ✅ Garantir
  * idempotência (não enviar e-mail duplicado) ✅ Tratar falhas via DLQ (Dead Letter Queue)
  *
- * ------------------------------------------------------------------------------------- 🔒
- * IDEMPOTÊNCIA (REGRA IMPORTANTE)
- * -------------------------------------------------------------------------------------
+ * -------------- 🔒 IDEMPOTÊNCIA (REGRA IMPORTANTE) --------------
  *
  * Este consumer pode receber o mesmo evento mais de uma vez.
  *
@@ -44,8 +36,7 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  *
  * Problemas evitados: ❌ E-mails duplicados ❌ Experiência ruim do usuário
  *
- * ------------------------------------------------------------------------------------- 🛡️
- * RESILIÊNCIA -------------------------------------------------------------------------------------
+ * ------------- 🛡️ RESILIÊNCIA -----------
  *
  * - Retry automático configurado no Spring - Backoff entre tentativas - Encaminhamento para DLQ em
  * caso de falha
@@ -54,9 +45,7 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  *
  * email.queue → retry → DLX → payment.dlq (ou email.dlq futuramente)
  *
- * ------------------------------------------------------------------------------------- ⚙️ BOAS
- * PRÁTICAS (PRODUÇÃO)
- * -------------------------------------------------------------------------------------
+ * ---------------- ⚙️ BOAS PRÁTICAS (PRODUÇÃO) ----------------
  *
  * - Usar logs estruturados (evitar System.out) - Incluir correlationId para rastreamento - Isolar
  * integração de e-mail em outra camada (ex: EmailService) - Tratar exceções externamente (SMTP,
@@ -79,21 +68,17 @@ public class EmailConsumer {
     }
 
     /**
-     * ================================================================================= 📥
-     * CONSUMIDOR PRINCIPAL — PAYMENT PROCESSED EVENT
-     * =================================================================================
+     * ============= 📥 CONSUMIDOR PRINCIPAL — PAYMENT PROCESSED EVENT =============
      *
      * 🧠 Reage ao evento:
      *
      * 👉 "O pagamento foi processado"
      *
-     * --------------------------------------------------------------------------------- 🔁 FLUXO
-     * EXECUTADO ---------------------------------------------------------------------------------
+     * ------------ 🔁 FLUXO EXECUTADO -------------
      *
      * 1. Recebe PaymentProcessedEvent 2. Executa envio de e-mail
      *
-     * --------------------------------------------------------------------------------- 🎯 OBJETIVO
-     * ---------------------------------------------------------------------------------
+     * --------------- 🎯 OBJETIVO ---------------
      *
      * Notificar o cliente que o pagamento do pedido foi concluído.
      *
@@ -109,8 +94,7 @@ public class EmailConsumer {
     }
 
     /**
-     * --------------------------------------------------------------------------------- 📧 ENVIO DE
-     * E-MAIL ---------------------------------------------------------------------------------
+     * ------------------ 📧 ENVIO DE E-MAIL --------------
      *
      * 🧠 Contém a lógica de envio de e-mail.
      *
@@ -118,8 +102,7 @@ public class EmailConsumer {
      *
      * - Integração com SMTP / SendGrid / SES - Templates de e-mail - Personalização por usuário
      *
-     * --------------------------------------------------------------------------------- ⚠️ REGRA
-     * CRÍTICA ---------------------------------------------------------------------------------
+     * ---------------- ⚠️ REGRA CRÍTICA ------------------
      *
      * Este método deve ser IDEMPOTENTE:
      *
@@ -131,32 +114,25 @@ public class EmailConsumer {
     }
 
     /**
-     * ================================================================================= ☠️
-     * CONSUMIDOR DE ERROS (DLQ)
-     * =================================================================================
+     * ================ ☠️ CONSUMIDOR DE ERROS (DLQ) ================
      *
      * 🧠 Responsável por tratar mensagens que falharam definitivamente.
      *
-     * --------------------------------------------------------------------------------- 📡 ORIGEM
-     * ---------------------------------------------------------------------------------
+     * ----------------- 📡 ORIGEM -----------------
      *
      * email.queue → falha → retry → DLX → payment.dlq (ou email.dlq)
      *
-     * --------------------------------------------------------------------------------- 🎯 OBJETIVO
-     * ---------------------------------------------------------------------------------
+     * --------------- 🎯 OBJETIVO --------------
      *
      * - Registrar erro - Permitir auditoria - Evitar perda de mensagem
      *
-     * --------------------------------------------------------------------------------- ⚠️ REGRAS
-     * IMPORTANTES ---------------------------------------------------------------------------------
+     * --------------- ⚠️ REGRAS IMPORTANTES -------------
      *
      * ❌ NÃO reprocessar automaticamente ❌ NÃO gerar loop infinito
      *
      * ✅ Tratar como falha definitiva
      *
-     * --------------------------------------------------------------------------------- 🚀
-     * MELHORIAS FUTURAS
-     * ---------------------------------------------------------------------------------
+     * ---------------- 🚀 MELHORIAS FUTURAS ------------------
      *
      * - Persistir erro em banco - Notificar sistemas externos (Slack, alertas) - Criar
      * reprocessamento manual - Incluir correlationId

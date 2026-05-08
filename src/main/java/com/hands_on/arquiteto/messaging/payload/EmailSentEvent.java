@@ -1,11 +1,9 @@
-package com.hands_on.arquiteto.event;
+package com.hands_on.arquiteto.messaging.payload;
 
 import java.util.UUID;
 
 /**
- * ===================================================================================== 📧 EVENTO
- * DE DOMÍNIO: EMAIL SENT
- * =====================================================================================
+ * ============ 📧 EVENTO DE DOMÍNIO: EMAIL SENT ============
  *
  * 🧠 VISÃO GERAL: Este evento representa um fato de negócio concluído no sistema:
  *
@@ -14,8 +12,7 @@ import java.util.UUID;
  * Assim como os outros eventos, este NÃO é uma entidade nem um DTO técnico. É um EVENTO DE DOMÍNIO,
  * que representa algo relevante que aconteceu.
  *
- * ------------------------------------------------------------------------------------- 🎯 OBJETIVO
- * -------------------------------------------------------------------------------------
+ * ----------- 🎯 OBJETIVO -----------
  *
  * Permitir que outros sistemas ou componentes reajam ao envio do e-mail, mantendo o sistema
  * desacoplado.
@@ -26,23 +23,18 @@ import java.util.UUID;
  * Integração com CRM
  *
  *
- * ------------------------------------------------------------------------------------- 📡 CONTEXTO
- * NO FLUXO (EVENT-DRIVEN)
- * -------------------------------------------------------------------------------------
+ * ------------- 📡 CONTEXTO NO FLUXO (EVENT-DRIVEN) -------------
  *
  * OrderCreatedEvent ↓ PaymentProcessedEvent ↓ EmailConsumer ↓ ✅ EmailSentEvent (este evento)
  *
  *
- * ------------------------------------------------------------------------------------- ✅
- * BENEFÍCIOS -------------------------------------------------------------------------------------
+ * --------------- ✅ BENEFÍCIOS ------------
  *
  * - Desacoplamento total entre serviços - Possibilidade de expansão sem alterar fluxo existente -
  * Clareza semântica (evento representa um resultado final) - Base para observabilidade e auditoria
  *
  *
- * ------------------------------------------------------------------------------------- 📦 POR QUE
- * USAR RECORD?
- * -------------------------------------------------------------------------------------
+ * ------------- 📦 POR QUE USAR RECORD? ---------------
  *
  * - Imutável (não pode ser alterado após criação) - Thread-safe (seguro em concorrência) - Simples
  * e objetivo
@@ -50,8 +42,7 @@ import java.util.UUID;
  * 👉 Ideal para transporte de eventos
  *
  *
- * ------------------------------------------------------------------------------------- 📊 CAMPO DO
- * EVENTO -------------------------------------------------------------------------------------
+ * -------------- 📊 CAMPO DO EVENTO ------------
  *
  * orderId:
  *
@@ -59,9 +50,7 @@ import java.util.UUID;
  * pedido - Usado para correlação entre eventos
  *
  *
- * ------------------------------------------------------------------------------------- 🔒
- * IDEMPOTÊNCIA (CONTEXTO)
- * -------------------------------------------------------------------------------------
+ * ------------- 🔒 IDEMPOTÊNCIA (CONTEXTO) ---------------
  *
  * Consumidores deste evento (se existirem) devem garantir:
  *
@@ -70,16 +59,14 @@ import java.util.UUID;
  * Exemplo: - Evitar registrar envio duplicado - Evitar múltiplas notificações externas
  *
  *
- * ------------------------------------------------------------------------------------- ⚠️ BOAS
- * PRÁTICAS -------------------------------------------------------------------------------------
+ * ----------------- ⚠️ BOAS PRÁTICAS --------------
  *
  * ✅ Manter evento simples e enxuto ✅ Não incluir lógica de negócio ✅ Não depender de entidades
  *
  * ❌ NÃO FAZER: - Não incluir campos desnecessários - Não acoplar com infraestrutura
  *
  *
- * ------------------------------------------------------------------------------------- 🚀 EVOLUÇÃO
- * FUTURA -------------------------------------------------------------------------------------
+ * -------------- 🚀 EVOLUÇÃO FUTURA ---------------
  *
  * Este evento pode evoluir para incluir:
  *

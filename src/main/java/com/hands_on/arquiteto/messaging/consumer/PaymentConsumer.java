@@ -4,14 +4,12 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import com.hands_on.arquiteto.config.RabbitConfig;
-import com.hands_on.arquiteto.event.OrderCreatedEvent;
-import com.hands_on.arquiteto.event.PaymentProcessedEvent;
+import com.hands_on.arquiteto.messaging.payload.OrderCreatedEvent;
+import com.hands_on.arquiteto.messaging.payload.PaymentProcessedEvent;
 
 
 /**
- * ================================================================================================
- * 📥 PAYMENT CONSUMER — PROCESSADOR DE EVENTOS DE PAGAMENTO
- * =====================================================================================
+ * ============ 📥 PAYMENT CONSUMER — PROCESSADOR DE EVENTOS DE PAGAMENTO ============
  *
  * 🧠 VISÃO GERAL: Este componente é responsável por consumir eventos de negócio relacionados à
  * criação de pedidos e executar o processamento de pagamento de forma assíncrona.
@@ -19,23 +17,17 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  * Ele faz parte de uma arquitetura orientada a eventos (EDA), onde serviços reagem a eventos ao
  * invés de se comunicarem diretamente.
  *
- * ------------------------------------------------------------------------------------------------
- * 📡 FLUXO DO SISTEMA
- * -------------------------------------------------------------------------------------
+ * --------------- 📡 FLUXO DO SISTEMA ---------------
  *
  * OrderService ↓ OrderEventPublisher ↓ OrderCreatedEvent ↓ RabbitMQ (payment.queue) ↓
  * PaymentConsumer (este componente) ↓ PaymentProcessedEvent ↓ EmailConsumer
  *
- * -----------------------------------------------------------------------------------------------
- * 🎯 RESPONSABILIDADES
- * -------------------------------------------------------------------------------------
+ * ----------------- 🎯 RESPONSABILIDADES -----------------
  *
  * ✅ Consumir evento OrderCreatedEvent ✅ Processar pagamento do pedido ✅ Garantir idempotência
  * (evitar duplicidade) ✅ Publicar próximo evento do fluxo (PaymentProcessedEvent)
  *
- * ------------------------------------------------------------------------------------------------
- * 🔒 IDEMPOTÊNCIA (REGRA CRÍTICA)
- * -------------------------------------------------------------------------------------
+ * ---------------- 🔒 IDEMPOTÊNCIA (REGRA CRÍTICA) ----------------
  *
  * Este consumer pode receber a mesma mensagem mais de uma vez (retry ou reentrega).
  *
@@ -48,9 +40,7 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  *
  * Problemas evitados: ❌ Cobrança duplicada ❌ Inconsistência de dados
  *
- * -----------------------------------------------------------------------------------------------
- * 🛡️ RESILIÊNCIA
- * -------------------------------------------------------------------------------------
+ * ---------------- 🛡️ RESILIÊNCIA ----------------
  *
  * - Retry automático configurado via Spring - Backoff entre tentativas - Integração com Dead Letter
  * Queue (DLQ)
@@ -59,9 +49,7 @@ import com.hands_on.arquiteto.event.PaymentProcessedEvent;
  *
  * payment.queue → retry → DLX → payment.dlq
  *
- * ------------------------------------------------------------------------------------------------
- * ⚙️ BOAS PRÁTICAS (PRODUÇÃO)
- * -------------------------------------------------------------------------------------
+ * ------------------ ⚙️ BOAS PRÁTICAS (PRODUÇÃO) -----------------
  *
  * - Substituir System.out por logs estruturados (ex: Logback) - Utilizar correlationId (MDC) para
  * rastreamento - Tratar exceções de forma controlada - Aplicar controle de concorrência (optimistic

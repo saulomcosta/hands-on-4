@@ -1,4 +1,4 @@
-package com.hands_on.arquiteto.event;
+package com.hands_on.arquiteto.messaging.payload;
 
 import java.math.BigDecimal;
 import java.util.UUID;

@@ -1,6 +1,9 @@
 package com.hands_on.arquiteto.config;
 
-// Importações do Spring AMQP (integração com RabbitMQ)
+// =============================================================
+// IMPORTAÇÕES SPRING AMQP / RABBITMQ
+// =============================================================
+
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
@@ -10,263 +13,347 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
-// Importa anotação que indica que esta classe contém configurações do Spring
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 📡 Configuração central do RabbitMQ
+ * ===========📡 RABBIT CONFIG ===========
  *
- * 🧠 Responsável por definir a infraestrutura de mensageria da aplicação, incluindo Exchange,
- * Filas, Bindings e estratégia de tratamento de erros.
+ * Configuração central da infraestrutura de mensageria.
  *
- * ----------------- 📦 COMPONENTES CONFIGURADOS:
+ * Esta classe é responsável por criar:
  *
- * ✅ Exchange (order.exchange) → Recebe mensagens dos produtores
+ * ✅ Exchanges ✅ Queues ✅ Dead Letter Queues ✅ Bindings ✅ Conversão JSON ✅ RabbitTemplate
  *
- * ✅ Queue principal (payment.queue) → Onde as mensagens ficam armazenadas para consumo
+ * ============ 🧠 OBJETIVO ARQUITETURAL ============
  *
- * ✅ Dead Letter Queue (payment.dlq) → Recebe mensagens que falharam após várias tentativas
+ * Transformar o sistema em:
  *
- * ✅ Binding → Define como mensagens são roteadas entre exchange e filas
+ * ✅ Event Driven Architecture ✅ Processamento assíncrono ✅ Sistema desacoplado ✅ Fluxo baseado em
+ * domínio ✅ Arquitetura resiliente
  *
- * ----------------- 🔁 FLUXO PRINCIPAL:
+ * =========== 🔥 FLUXO COMPLETO ===========
  *
- * Producer (OrderService) ↓ Exchange (order.exchange) ↓ (routing key: order.created) Queue
- * (payment.queue) ↓ Consumer (PaymentConsumer)
+ * OrderService ↓ OrderCreatedEvent ↓ order.exchange ↓ payment.queue ↓ PaymentConsumer ↓
+ * PaymentProcessedEvent ↓ payment.exchange ↓ email.queue ↓ EmailConsumer
  *
- * ----------------- ❌ FLUXO DE ERRO (RESILIÊNCIA):
+ * ============ ❌ FLUXO DE ERRO ============
  *
- * Se o consumer falhar após retries:
+ * Se um consumer falhar:
  *
- * payment.queue ↓ DLX (dlx.exchange) ↓ (payment.dlq) Dead Letter Queue
+ * Queue Principal ↓ DLX (Dead Letter Exchange) ↓ Dead Letter Queue
  *
- * ----------------- 🚀 BENEFÍCIOS:
+ * Exemplo:
  *
- * - Desacoplamento entre serviços - Processamento assíncrono - Tolerância a falhas - Não perde
- * mensagens (DLQ) - Escalabilidade
+ * payment.queue ↓ payment.dlq
+ *
+ * =============== 🚀 BENEFÍCIOS ===============
+ *
+ * ✅ Desacoplamento ✅ Escalabilidade ✅ Resiliência ✅ Retry ✅ Tolerância a falhas ✅ Reprocessamento ✅
+ * Microsserviços preparados
+ *
+ * ================
  */
 
 @Configuration
 public class RabbitConfig {
 
+    // =============
+    // EXCHANGES
+    // =============
 
-    // ================================
-    // CONSTANTES (PADRONIZAÇÃO)
-    // ================================
-
-    // ================================
-    // Exchanges
-    // ================================
-
-    // 📡 Exchange principal (roteamento de eventos de negócio)
+    /**
+     * 📡 Exchange responsável pelos eventos de pedidos.
+     *
+     * Exemplo: - OrderCreatedEvent
+     */
     public static final String ORDER_EXCHANGE = "order.exchange";
 
-    // 📡 Exchange para processamento de pagamento
+    /**
+     * 📡 Exchange responsável pelos eventos de pagamento.
+     *
+     * Exemplo: - PaymentProcessedEvent
+     */
     public static final String PAYMENT_EXCHANGE = "payment.exchange";
 
-    // 📡 Exchange para envio de e-mails
-    public static final String EMAIL_EXCHANGE = "email.exchange";
-
-    // ================================
-    // Queues
-    // ================================
-
-    // 📥 Fila principal de processamento de pagamento
-    public static final String PAYMENT_QUEUE = "payment.queue";
-
-    // 📥 Fila principal de processamento de e-mail
-    public static final String EMAIL_QUEUE = "email.queue";
-
-    // ================================
-    // Routing Keys (Eventos)
-    // ================================
-
-    // 📥 Fila de eventos de pagamento processado (routing key)
-    public static final String PAYMENT_PROCESSED = "payment.processed";
-
-    // 🔀 Routing key usada para direcionar mensagens de pedidos criado
-    public static final String ORDER_CREATED = "order.created";
-
-    // 🔀 Routing Key usada para direcionar mensagens de email
-    public static final String EMAIL_SENT = "email.sent";
-
-    // ================================
-    // DLQ e DLX
-    // ================================
-
-    // ☠️ Nome da Dead Letter Queue (fila de erro)
-    public static final String PAYMENT_DLQ = "payment.dlq";
-
-    // ⚙️ Chave padrão usada pelo RabbitMQ para definir exchange de Dead Letter (DLX)
+    /**
+     * 📡 Exchange de Dead Letter.
+     *
+     * Recebe mensagens que falharam.
+     */
     public static final String DLX_EXCHANGE = "dlx.exchange";
 
-    // ================================
-    // Dead Letter
-    // ================================
+    // =============
+    // QUEUES
+    // =============
 
-    // 🔁 Exchange de Dead Letter (DLX)
-    public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
+    /**
+     * 📥 Fila responsável por processar pagamentos.
+     */
+    public static final String PAYMENT_QUEUE = "payment.queue";
 
-    // ⚙️ Chave padrão usada pelo RabbitMQ para definir routing key da DLQ
+    /**
+     * 📥 Fila responsável por envio de e-mails.
+     */
+    public static final String EMAIL_QUEUE = "email.queue";
+
+    /**
+     * ☠️ Dead Letter Queue do pagamento.
+     */
+    public static final String PAYMENT_DLQ = "payment.dlq";
+
+    /**
+     * ☠️ Dead Letter Queue do e-mail.
+     */
+    public static final String EMAIL_DLQ = "email.dlq";
+
+    // ================
+    // ROUTING KEYS
+    // ================
+
+    /**
+     * 🔀 Evento disparado quando um pedido é criado.
+     */
+    public static final String ORDER_CREATED = "order.created";
+
+    /**
+     * 🔀 Evento disparado quando pagamento é processado.
+     */
+    public static final String PAYMENT_PROCESSED = "payment.processed";
+
+    /**
+     * 🔀 Evento disparado quando e-mail é enviado.
+     */
+    public static final String EMAIL_SENT = "email.sent";
+
+    // ============
+    // ARGUMENTOS DLQ
+    // ============
+
+    /**
+     * 🔁 Exchange para mensagens com falha.
+     */
     public static final String X_DEAD_LETTER_EXCHANGE = "x-dead-letter-exchange";
 
+    /**
+     * 🔁 Routing key usada pela DLQ.
+     */
+    public static final String X_DEAD_LETTER_ROUTING_KEY = "x-dead-letter-routing-key";
 
+    // ==============
+    // JSON CONVERTER
+    // ==============
+
+    /**
+     * 🔄 Conversor JSON.
+     *
+     * Responsável por:
+     *
+     * ✅ Converter objeto Java → JSON ✅ Converter JSON → objeto Java
+     *
+     * Permite enviar records/eventos diretamente.
+     */
     @Bean
     public MessageConverter jsonMessageConverter() {
-
-        /*
-         * 🔄 Conversor de mensagem (JSON)
-         *
-         * 🧠 Responsável por transformar objetos Java em JSON ao enviar mensagens e JSON em objetos
-         * Java ao receber.
-         *
-         * ✅ Permite trabalhar com objetos diretamente, sem precisar construir JSON manualmente ✅
-         * Facilita integração entre serviços desacoplados
-         */
         return new JacksonJsonMessageConverter();
     }
 
+    // ================
+    // RABBIT TEMPLATE
+    // ===============
+
+    /**
+     * 📤 RabbitTemplate
+     *
+     * Classe responsável por publicar mensagens.
+     *
+     * Utilizada pelos publishers:
+     *
+     * - OrderEventPublisher - PaymentEventPublisher
+     */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
             MessageConverter messageConverter) {
 
-        /*
-         * 📤 RabbitTemplate (Produtor de mensagens)
-         *
-         * 🧠 Classe principal usada para enviar mensagens ao RabbitMQ.
-         *
-         * 🔧 Configurações: - ConnectionFactory: define a conexão com o broker - MessageConverter:
-         * define como os dados são serializados (JSON neste caso)
-         *
-         * ✅ Utilizado em services (ex: OrderService) para publicar eventos ✅ Abstrai complexidade
-         * de envio de mensagens
-         *
-         * Exemplo de uso: rabbitTemplate.convertAndSend(exchange, routingKey, objeto);
-         */
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
+
         template.setMessageConverter(messageConverter);
 
         return template;
     }
 
-    // ================================
+    // ==================
     // EXCHANGES
-    // ================================
+    // ==================
 
     /**
-     * 📡 Exchange principal
-     *
-     * Tipo: DIRECT
-     *
-     * 🧠 Direciona mensagens com base na routing key exata.
+     * 📡 Exchange de pedidos.
      */
     @Bean
     public DirectExchange orderExchange() {
-        /*
-         * Cria uma Exchange do tipo DIRECT.
-         *
-         * 🧠 O que é uma Exchange? É o componente responsável por receber mensagens do produtor e
-         * decidir para qual fila elas devem ir.
-         *
-         * 🧠 Tipo DIRECT: Envia a mensagem para a fila que tiver a routing key EXATA.
-         *
-         * Exemplo: Se enviar mensagem com routing key "order.created", ela será enviada para a fila
-         * associada com essa mesma key.
-         */
         return new DirectExchange(ORDER_EXCHANGE);
     }
 
     /**
-     * ☠️ Dead Letter Exchange (DLX)
-     *
-     * 🧠 Recebe mensagens que falharam no processamento.
+     * 📡 Exchange de pagamentos.
+     */
+    @Bean
+    public DirectExchange paymentExchange() {
+        return new DirectExchange(PAYMENT_EXCHANGE);
+    }
+
+    /**
+     * ☠️ Dead Letter Exchange.
      */
     @Bean
     public DirectExchange dlxExchange() {
         return new DirectExchange(DLX_EXCHANGE);
     }
 
-    // ================================
-    // QUEUES
-    // ================================
+    // =================
+    // PAYMENT QUEUE
+    // =================
 
     /**
-     * 📥 Fila principal de pagamento
+     * 📥 Fila de processamento de pagamento.
      *
-     * 🧠 Características: - Durável (não perde mesmo com restart) - Configurada com DLQ
+     * Recebe:
      *
-     * 🔁 Se falhar: → mensagem vai para DLX → depois para payment.dlq
+     * OrderCreatedEvent
+     *
+     * Consumer:
+     *
+     * PaymentConsumer
+     *
+     * Possui:
+     *
+     * ✅ Persistência ✅ DLQ ✅ Resiliência
      */
-
     @Bean
     public Queue paymentQueue() {
 
-        return QueueBuilder
-                // Mensagem não é apagada mesmo se o RabbitMQ for reiniciado
-                .durable(PAYMENT_QUEUE)
-                // Define exchange de erro (DLX)
-                .withArgument(X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE)
-                // Define routing key da fila de erro
-                .withArgument(X_DEAD_LETTER_ROUTING_KEY, PAYMENT_DLQ).build();
+        return QueueBuilder.durable(PAYMENT_QUEUE)
 
+                // Exchange para mensagens com falha
+                .withArgument(X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE)
+
+                // Routing key da DLQ
+                .withArgument(X_DEAD_LETTER_ROUTING_KEY, PAYMENT_DLQ)
+
+                .build();
     }
 
+    // ==================
+    // EMAIL QUEUE
+    // ==================
+
     /**
-     * ☠️ Dead Letter Queue (DLQ)
+     * 📥 Fila de envio de e-mail.
      *
-     * 🧠 Armazena mensagens que falharam após todas as tentativas.
+     * Recebe:
      *
-     * 📌 Usos: - Auditoria - Reprocessamento manual - Debug
+     * PaymentProcessedEvent
+     *
+     * Consumer:
+     *
+     * EmailConsumer
+     *
+     * ================== O QUE ESTA FILA ENTREGA ==================
+     *
+     * ✅ Desacoplamento do envio de e-mail ✅ Processamento assíncrono ✅ Retry automático ✅
+     * Resiliência ✅ Não bloquear fluxo principal
+     *
+     * ================== EXEMPLO REAL ===================
+     *
+     * Usuário cria pedido ↓ Pagamento aprovado ↓ Evento enviado ↓ Email processado separadamente
+     *
+     * Mesmo se email falhar:
+     *
+     * ✅ Pedido continua funcionando
      */
     @Bean
-    public Queue deadLetterQueue() {
+    public Queue emailQueue() {
+
+        return QueueBuilder.durable(EMAIL_QUEUE)
+
+                // Exchange de erro
+                .withArgument(X_DEAD_LETTER_EXCHANGE, DLX_EXCHANGE)
+
+                // Routing key DLQ email
+                .withArgument(X_DEAD_LETTER_ROUTING_KEY, EMAIL_DLQ)
+
+                .build();
+    }
+
+    // ================
+    // DEAD LETTER QUEUES
+    // ================
+
+    /**
+     * ☠️ DLQ do pagamento.
+     */
+    @Bean
+    public Queue paymentDeadLetterQueue() {
         return new Queue(PAYMENT_DLQ);
     }
 
-    // ================================
-    // BINDINGS
-    // ================================
-
     /**
-     * 🔗 Binding principal
-     *
-     * Liga: Exchange → Queue
-     *
-     * 🧠 Regra: Se routing key = "order.created" → vai para payment.queue
+     * ☠️ DLQ do email.
      */
     @Bean
-    public Binding binding() {
-        /*
-         * Cria a ligação entre: - Exchange - Queue - Routing Key
-         *
-         * 🧠 O que é Binding? É a regra que conecta uma fila a uma exchange.
-         *
-         * Aqui estamos dizendo:
-         *
-         * "Toda mensagem enviada para a exchange 'order.exchange' com routing key 'order.created'
-         * deve ir para a fila 'payment.queue'"
-         *
-         * Fluxo completo:
-         *
-         * Producer (OrderService) ↓ Exchange (order.exchange) ↓ (routing key: order.created) Queue
-         * (payment.queue) ↓ Consumer (PaymentService)
-         */
+    public Queue emailDeadLetterQueue() {
+        return new Queue(EMAIL_DLQ);
+    }
+
+    // ================
+    // BINDINGS
+    // ================
+
+    /**
+     * 🔗 Binding:
+     *
+     * order.exchange ↓ payment.queue
+     *
+     * Routing key:
+     *
+     * order.created
+     */
+    @Bean
+    public Binding paymentBinding() {
 
         return BindingBuilder.bind(paymentQueue()).to(orderExchange()).with(ORDER_CREATED);
-
     }
 
     /**
-     * ☠️ Binding da DLQ
+     * 🔗 Binding:
      *
-     * Liga: DLX → Dead Letter Queue
+     * payment.exchange ↓ email.queue
      *
-     * 🧠 Regra: Mensagens com routing key "payment.dlq" → vão para fila de erro
+     * Routing key:
+     *
+     * payment.processed
      */
     @Bean
-    public Binding dlqBinding() {
-        return BindingBuilder.bind(deadLetterQueue()).to(dlxExchange()).with(PAYMENT_DLQ);
+    public Binding emailBinding() {
+
+        return BindingBuilder.bind(emailQueue()).to(paymentExchange()).with(PAYMENT_PROCESSED);
     }
 
+    /**
+     * ☠️ Binding da DLQ do pagamento.
+     */
+    @Bean
+    public Binding paymentDlqBinding() {
+
+        return BindingBuilder.bind(paymentDeadLetterQueue()).to(dlxExchange()).with(PAYMENT_DLQ);
+    }
+
+    /**
+     * ☠️ Binding da DLQ do email.
+     */
+    @Bean
+    public Binding emailDlqBinding() {
+
+        return BindingBuilder.bind(emailDeadLetterQueue()).to(dlxExchange()).with(EMAIL_DLQ);
+    }
 }

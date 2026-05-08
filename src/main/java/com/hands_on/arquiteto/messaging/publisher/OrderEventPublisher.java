@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.hands_on.arquiteto.config.RabbitConfig;
 // Importa a entidade Order (objeto que será enviado como mensagem)
 import com.hands_on.arquiteto.entity.Order;
-import com.hands_on.arquiteto.event.OrderCreatedEvent;
+import com.hands_on.arquiteto.messaging.payload.OrderCreatedEvent;
 
 
 /**
@@ -21,31 +21,23 @@ import com.hands_on.arquiteto.event.OrderCreatedEvent;
  * Ele faz parte da arquitetura orientada a eventos (Event-Driven Architecture), onde serviços não
  * se comunicam diretamente, mas reagem a eventos.
  *
- * ------------------------------------------------------------------------------------- 🎯
- * RESPONSABILIDADE
- * -------------------------------------------------------------------------------------
+ * ----------- 🎯 RESPONSABILIDADE -----------
  *
  * ✅ Converter entidade de domínio (Order) em evento de negócio ✅ Publicar evento no broker
  * (RabbitMQ) ✅ Garantir desacoplamento entre serviços
  *
- * ------------------------------------------------------------------------------------------ 📡
- * CONTEXTO ARQUITETURAL
- * -------------------------------------------------------------------------------------
+ * ------------ 📡 CONTEXTO ARQUITETURAL ------------
  *
  * OrderService ↓ OrderEventPublisher (este componente) ↓ RabbitMQ (Exchange → Queue) ↓ Consumers
  * (Payment, Email, etc.)
  *
- * ------------------------------------------------------------------------------------- ⚠️
- * PRINCÍPIO IMPORTANTE
- * -------------------------------------------------------------------------------------
+ * -------------- ⚠️ PRINCÍPIO IMPORTANTE --------------
  *
  * ❌ NÃO enviar entidades (Order) ✅ SEMPRE enviar eventos de domínio (OrderCreatedEvent)
  *
  * Isso garante: - Baixo acoplamento - Independência entre serviços - Evolução segura do sistema
  *
- * ------------------------------------------------------------------------------------------- ✅
- * BENEFÍCIOS
- * ----------------------------------------------------------------------------------------
+ * -------------- ✅ BENEFÍCIOS --------------
  *
  * - Arquitetura desacoplada - Facilidade de escalar consumidores - Clareza semântica (eventos de
  * negócio) - Base para microservices e Kafka
@@ -79,46 +71,34 @@ public class OrderEventPublisher {
 
 
     /**
-     * ================================================================================= 📤
-     * PUBLICAÇÃO DE EVENTO: ORDER CREATED
-     * =================================================================================
+     * ============== 📤 PUBLICAÇÃO DE EVENTO: ORDER CREATED ==============
      *
      * 🧠 Este método representa o fato de negócio:
      *
      * 👉 "Um pedido foi criado"
      *
-     * -------------------------------------------------------------------------------------------
-     * 🔁 FLUXO EXECUTADO
-     * ------------------------------------------------------------------------------------
+     * ------------- 🔁 FLUXO EXECUTADO -------------
      *
      * 1. Recebe entidade Order 2. Converte para OrderCreatedEvent 3. Publica evento no RabbitMQ
      *
-     * -------------------------------------------------------------------------------------------
-     * 📦 POR QUE CONVERTER PARA EVENTO?
-     * ---------------------------------------------------------------------------------
+     * ------------- 📦 POR QUE CONVERTER PARA EVENTO? -------------
      *
      * ❌ Entidade (Order) possui: - muitos campos - regras internas - acoplamento com banco
      *
      * ✅ Evento (OrderCreatedEvent) possui: - apenas dados necessários - sem dependência de
      * infraestrutura - significado claro de negócio
      *
-     * -------------------------------------------------------------------------------------------
-     * 📡 DESTINO
-     * ------------------------------------------------------------------------------------
+     * ----------- 📡 DESTINO -----------
      *
      * Exchange: order.exchange Routing Key: order.created
      *
-     * ------------------------------------------------------------------------------------------ 🎯
-     * RESULTADO
-     * --------------------------------------------------------------------------------------
+     * ---------- 🎯 RESULTADO ----------
      *
      * Outros serviços passam a reagir de forma assíncrona:
      *
      * - PaymentConsumer → processa pagamento - EmailConsumer → envia notificação
      *
-     * -------------------------------------------------------------------------------------------
-     * ⚠️ BOAS PRÁTICAS
-     * ---------------------------------------------------------------------------------
+     * ----------- ⚠️ BOAS PRÁTICAS -----------
      *
      * ✅ Publicar apenas após persistência no banco ✅ Garantir consistência (ideal: Outbox Pattern)
      * ✅ Evitar lógica de negócio no publisher
